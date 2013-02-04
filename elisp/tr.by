@@ -1,0 +1,74 @@
+;; WTF Symbol lex fails on a single char i.e. (require a b) -> FAIL (require a1 b2) -> OK
+
+%package semantic-tr-by
+%provide tr-by
+
+%languagemode tr-mode
+%start        typed-racket
+
+%token LANG     "lang"
+%token DEFINE   "define"
+%token ONLY-IN  "only-in"
+
+%put DEFINE summary "Function: (define symbol expression)"
+
+;; %token DEFINE_T "define:"
+%keyword REQUIRE  "require"
+
+%token <punctuation>   HASH       "\\`[#]\\'"
+%token <punctuation>   COLON       "\\`[:]\\'"
+
+;; %token <punctuation> "\\`[:]\\'"
+
+%token <open-paren> OPENPAREN "("
+;;%token <open-paren> OPENBRACKET "["
+
+%token <close-paren> CLOSEPAREN ")"
+;;%token <close-paren> CLOSEBRACKET "]"
+
+%%
+
+typed-racket : semantic-list
+	       (EXPAND $1 racket-list)
+	     | HASH LANG symbol 
+	       ( nil )
+	     ;
+
+racket-list : OPENPAREN racket-in-list CLOSEPAREN
+	       ( ,$2 )
+	    ;
+
+racket-in-list : DEFINE symbol expression
+		 (VARIABLE-TAG $2 nil $3)
+	       | REQUIRE require-spec-seq		 
+		 (INCLUDE-TAG $2 nil)
+	     ;
+
+;;	     | (ONLY-IN module-path)
+;;   ( ,$2 )
+
+require-spec-seq : module-path require-spec-seq 
+		   ,(cons (car $1) $2)
+		 | module-path
+		   ( ,$1 )
+		 | ;; empty (require)
+		 ;
+
+		 ;; | symbol CLOSEPAREN
+		 ;;   (INCLUDE-TAG $1 nil)
+		 ;; | CLOSEPAREN 
+		 ;;   (INCLUDE-TAG $1 nil)
+		 ;; ;
+
+;; | symbol
+;; (INCLUDE-TAG $1 nil)
+
+module-path : symbol 
+	    | string
+	    ;
+
+expression : symbol
+	   | semantic-list
+	   | string
+	   | number
+	   ;
