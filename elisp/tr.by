@@ -7,18 +7,18 @@
 %start        typed-racket
 
 %token LANG     "lang"
-%token DEFINE   "define"
+;; %token DEFINE   "define"
 %token ONLY-IN  "only-in"
 
 %put DEFINE summary "Function: (define symbol expression)"
 
 ;; %token DEFINE_T "define:"
 %keyword REQUIRE  "require"
+%keyword DEFINE   "define"
 
 %token <punctuation>   HASH       "\\`[#]\\'"
-%token <punctuation>   COLON       "\\`[:]\\'"
-
-;; %token <punctuation> "\\`[:]\\'"
+%token <punctuation>   COLON      "\\`[:]\\'"
+%token <punctuation> LEFT-ARROW   "->"
 
 %token <open-paren> OPENPAREN "("
 ;;%token <open-paren> OPENBRACKET "["
@@ -35,40 +35,93 @@ typed-racket : semantic-list
 	     ;
 
 racket-list : OPENPAREN racket-in-list CLOSEPAREN
-	       ( ,$2 )
+	      ,(progn
+		 (message "RL: %S" vals)
+		 ,$2)
 	    ;
 
-racket-in-list : DEFINE symbol expression
-		 (VARIABLE-TAG $2 nil $3)
+racket-in-list : DEFINE symbol semantic-list
+		 (VARIABLE-TAG $2 nil nil)
+	       | DEFINE symbol string
+		 (VARIABLE-TAG $2 $3 nil)
+	       | DEFINE symbol symbol
+		 (VARIABLE-TAG $2 $3 nil)
+	       | DEFINE semantic-list expression
+		 ,(let ((rs (split-string 
+			     (car (EXPAND $2 sexp))
+			     " ")))
+		    (message "FN: %S" rs)
+		    (FUNCTION-TAG (car rs) 
+				  nil
+				  (cdr rs) 
+				  nil))
 	       | REQUIRE require-spec-seq		 
-		 (INCLUDE-TAG $2 nil)
-	     ;
+		 ,(progn
+		    (message "REQS: %S" vals)
+		    (INCLUDE-TAG $2 nil))
+	       | COLON symbol semantic-list		 
+		 ,(progn
+		    (let ((rs (EXPAND $3 sexp)))
+		      (message "RIL: %S" $2)
+		      (message "RIL: %S" rs)
+		      (FUNCTION-TAG $2 (car rs) (list "ray" "eve") nil)))
+	       ;
 
-;;	     | (ONLY-IN module-path)
-;;   ( ,$2 )
+;; | (ONLY-IN module-path)
+;; ( ,$2 )
 
-require-spec-seq : module-path require-spec-seq 
+require-spec-seq : require-spec require-spec-seq 
 		   ,(cons (car $1) $2)
-		 | module-path
+		 | require-spec
 		   ( ,$1 )
+		 | semantic-list require-spec-seq
+		   ,(cons (car (EXPAND $1 qualified-require-spec)) $2)
+		 | semantic-list
+		   (EXPAND $1 qualified-require-spec)
 		 | ;; empty (require)
 		 ;
 
-		 ;; | symbol CLOSEPAREN
-		 ;;   (INCLUDE-TAG $1 nil)
-		 ;; | CLOSEPAREN 
-		 ;;   (INCLUDE-TAG $1 nil)
-		 ;; ;
+require-spec : symbol 
+	     | string
+	     ;
 
-;; | symbol
-;; (INCLUDE-TAG $1 nil)
+qualified-require-spec : 
+    OPENPAREN ONLY-IN require-spec require-spec-seq CLOSEPAREN
+    ( ,$3 )
+  ;
 
-module-path : symbol 
-	    | string
-	    ;
 
-expression : symbol
-	   | semantic-list
-	   | string
-	   | number
+symbol-seq :  symbol symbol-seq 
+	     ,(cons $1 ,$2)
+	   | ;; EMPTY
+	     ,(list)
 	   ;
+
+sequence : expression sequence
+	   ,(progn
+	      ;;(message "SEQ0: %S" vals)
+	      (cons (car $1) $2))
+	 | expression
+	   ,(progn
+	      ;;(message "SEQ1: %S" vals)
+	      $1)
+	 ;
+
+sexp : OPENPAREN sequence CLOSEPAREN
+       ,(progn
+	  ;;(message "SEXP: %S" $2)
+	  (let ((s-exp (mapconcat 'identity $2 " ")))
+	    (message "S-EXP %S" s-exp)
+	    (list s-exp)))
+     ;
+    
+    
+expression :
+    semantic-list
+    ,(let ((rs (EXPAND $1 sexp)))
+       ;;(message "EXP-SL: %S" rs)
+       (list (concat "(" (car rs) ")")))
+  | symbol 
+  | string 
+  | number 
+  ;
