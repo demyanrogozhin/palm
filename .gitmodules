@@ -1,3 +1,6 @@
 [submodule "ecb"]
 	path = ecb
 	url = https://github.com/RayRacine/ecb
+[submodule "geiser"]
+	path = geiser
+	url = git://github.com/RayRacine/geiser.git
