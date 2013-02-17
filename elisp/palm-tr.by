@@ -1,9 +1,7 @@
-;; WTF Symbol lex fails on a single char i.e. (require a b) -> FAIL (require a1 b2) -> OK
-
 %package semantic-tr-by
-%provide tr-by
+%provide palm-tr-by
 
-%languagemode tr-mode
+%languagemode palm-tr-mode
 %start        typed-racket
 
 %token LANG     "lang"
@@ -36,7 +34,7 @@ typed-racket : semantic-list
 
 racket-list : OPENPAREN racket-in-list CLOSEPAREN
 	      ,(progn
-		 (message "RL: %S" vals)
+		 ;;(message "RL: %S" vals)
 		 ,$2)
 	    ;
 
@@ -50,21 +48,23 @@ racket-in-list : DEFINE symbol semantic-list
 		 ,(let ((rs (split-string 
 			     (car (EXPAND $2 sexp))
 			     " ")))
-		    (message "FN: %S" rs)
+		    ;;(message "FN: %S" rs)
 		    (FUNCTION-TAG (car rs) 
 				  nil
 				  (cdr rs) 
 				  nil))
 	       | REQUIRE require-spec-seq		 
 		 ,(progn
-		    (message "REQS: %S" vals)
+		    ;;(message "REQS: %S" vals)
 		    (INCLUDE-TAG $2 nil))
 	       | COLON symbol semantic-list		 
-		 ,(progn
-		    (let ((rs (EXPAND $3 sexp)))
-		      (message "RIL: %S" $2)
-		      (message "RIL: %S" rs)
-		      (FUNCTION-TAG $2 (car rs) (list "ray" "eve") nil)))
+	      ;;,(progn
+	      ;;    (let ((rs (EXPAND $3 sexp)))
+		      ;;(message "RIL: %S" $2)
+		      ;;(message "RIL: %S" rs)
+		      ;; (FUNCTION-TAG $2 (car rs) (list "ray" "eve") nil)
+		 ( nil )
+
 	       ;
 
 ;; | (ONLY-IN module-path)
@@ -111,7 +111,7 @@ sexp : OPENPAREN sequence CLOSEPAREN
        ,(progn
 	  ;;(message "SEXP: %S" $2)
 	  (let ((s-exp (mapconcat 'identity $2 " ")))
-	    (message "S-EXP %S" s-exp)
+	    ;;(message "S-EXP %S" s-exp)
 	    (list s-exp)))
      ;
     

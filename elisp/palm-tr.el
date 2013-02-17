@@ -4,10 +4,31 @@
 
 (require 'semantic)
 (require 'semantic/bovine)
-(require 'tr-by)
+(require 'palm-tr-by)
 (require 'semantic/format)
 (require 'semantic/dep)
 
+(defvar-mode-local palm-tr-mode 
+  semantic-tag-expand-function 
+  'palm-tr-expand-semantic-tag
+  "Function used to expand tags generated in the Palm TR bovine parser.")
+
+(defun palm-tr-expand-tag-require-namelist (tag)
+  "Expand an aggregated (require ...) TAG"
+  (reverse (mapcar (lambda (module) 
+		     (semantic-tag-clone tag module))
+		   (semantic-tag-name tag))))
+
+(defun palm-tr-expand-semantic-tag (tag)
+  "Expand a aggregating TAG into a list of equivalent tags, or nil."  
+  ;; Expand TR require (include) TAG.
+  (if (eq (semantic-tag-class tag) 'include)
+      ;; The name of the tag is a list of require which we expand.
+      (if (consp (semantic-tag-name tag))
+	  (palm-tr-expand-tag-require-namelist tag)
+	(list tag))
+    (list tag)))
+	
 (define-lex-regex-analyzer semantic-lex-scheme-symbol
   "Detect and create symbol and keyword tokens."
   "\\(\\sw\\([:]\\|\\sw\\|\\s_\\)+\\)"
@@ -60,4 +81,4 @@ syntax as specified by the syntax table."
         imenu-create-index-function 'semantic-create-imenu-index)
   (setq semantic-lex-analyzer #'semantic-scheme-lexer))
   
-(provide 'tr)
+(provide 'palm-tr)
