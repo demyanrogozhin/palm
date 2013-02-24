@@ -16,30 +16,10 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'palm-tr)
-(require 'palm-inf)
-(require 'palm-edit)
-(require 'palm-syntax)
 
-(defun palm-tr-mode-init ()
-  "Initialize Palm Major mode.  Run by mode-hook."
-  (message "FLD: %s" font-lock-defaults)
-  (add-to-list 'semantic-new-buffer-setup-functions 
-	       '(palm-tr-mode . semantic-default-tr-setup)))
+(defun palm-edit-insert-lambda ()
+  "Insert λ at point."
+  (interactive)
+  (insert-char ?λ 1))
 
-(define-derived-mode palm-tr-mode scheme-mode "Palm"
-  (setq font-lock-defaults (palm-syntax-font-lock-insensitive-case font-lock-defaults))
-  (font-lock-add-keywords 'palm-tr-mode palm-syntax--keywords)
-  (add-hook 'palm-tr-mode-hook 'palm-tr-mode-init))
-
-
-(add-to-list 'auto-mode-alist '("\\.rkt\\'" . palm-tr-mode))
-
-(ecb-activate)
-(semantic-mode 1)
-(setq font-lock-keywords-case-fold-search nil)
-
-;; (add-to-list srecode-map-load-path "./
-
-
-(provide 'palm)
+(provide 'palm-edit)

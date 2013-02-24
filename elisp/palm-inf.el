@@ -1,6 +1,4 @@
 ;;; Comint interaction with a Typed Racket REPL.
-(provide 'palm-inf)
-
 (require 'comint)
 
 (defconst palm-inf--buffer-name "*palm-inferior-racket*")
@@ -23,16 +21,12 @@
 
 (defun palm-inf-spawn-racket-process ()
   "Spawn a Racket process under comint."
-  (interactive)
- 
+  (interactive) 
   ;; make mode local
   (setq ansi-color-for-comint-mode t)
-
   (switch-to-buffer-other-window
    (get-buffer-create palm-inf--buffer-name))
-
   (palm-inf--comint-mode)
-
   (comint-exec (current-buffer)
 	       "palm-inferior-racket"
 	       palm-inf--racket-cmd
